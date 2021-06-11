@@ -2,7 +2,7 @@
  * sm_test.c
  *
  * A set of tests for the functionality of
- * storagemanager.c .
+ * storageman.c .
  *
  * Not currently automated--the generated database 
  * file should be checked for correctness manually.
@@ -18,7 +18,7 @@
 #include <string.h>
 #include <sys/stat.h>
 #include "yahi.h"
-#include "storagemanager.h"
+#include "storageman.h"
 
 
 typedef struct tbl_rec {
@@ -88,7 +88,7 @@ int main(int argc, char **argv)
     // version of the first block into this second 
     // block.
     int new_id = sm_new_blk(test_tbl);
-    sm_write(test_tbl, 0, data2);
+    sm_write(test_tbl, 1, data2);
 
 
     // Close out the file and free up any
