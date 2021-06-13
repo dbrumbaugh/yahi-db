@@ -1,7 +1,15 @@
-/* buffermanager.c
+/* page.c
  *
- * A simple buffer management library for the yahi-db 
- * project.
+ * Pages represent the "in-memory" view of a block of data on disk,
+ * and track information such as what table they belong to, whether
+ * the block is "pinned" (which means that is is being used by the database),
+ * or locked (for concurrency), etc.
+ *
+ * A finite number of pages are maintained in a page buffer, in the pgbuffer
+ * module. This module handles loading and unloading pages. The page module
+ * itself simply contains the page structure, and routines for interacting with
+ * it. All client interactions with these components should be through the code
+ * in pgbuffer.
  *
  * Copyright 2021, Douglas B. Rumbaugh
  * This code is published under the BSD 3-Clause License,
@@ -13,7 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "blockio.h"
-#include "pageman.h"
+#include "page.h"
 #include "yahi.h"
 
 page **_PAGE_POOL;
