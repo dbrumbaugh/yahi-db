@@ -20,64 +20,99 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include "blockio.h"
 #include "page.h"
 #include "yahi.h"
 
-page **_PAGE_POOL;
-int _POOL_SIZE;
 
-void pg_pool_init(int pool_size) 
+// At least for now, we won't do any record spanning. So, all updates
+// must fit within the bounds of a single block.
+int pg_boundscheck(int offset, int length)
 {
-    _PAGE_POOL = calloc(pool_size, sizeof(page));
-    _POOL_SIZE = pool_size;
+    return (offset + length < BLOCKSIZE) ? TRUE : FALSE;
 }
 
 
-/*
-page *pg_load(FILE *file, int id)
+int pg_getint(page *pg, int offset)
 {
-    // Find an unpinned page to evict
-    for (int i=0; i<_POOL_SIZE; i++) {
-        if (!_PAGE_POOL[i]->pinned) {
-            pg_flush(_PAGE_POOL[i]);
-            blk_read(file, id, _PAGE_POOL[i]->data);
-
-        }
+    if (pg_boundscheck(offset, sizeof(int))) {
+        int result = (int) pg->data[offset];
+        return result;
     }
 
+    // gotta figure out a good way to signal the error case here. Perhaps 
+    // just require an errno check? Or maybe use a longjump?
+    return 0;
 }
 
 
-void pg_flush(page* pg)
+
+char *pg_getchar(page *pg, int offset, int length)
 {
+    // better create a copy and return it, at least until
+    // I have a better idea of how concurrency will be managed.
+    // Last thing I need is to just return a pointer to the data 
+    // in the page buffer, and then have the page get swapped out
+    // underneath me!
+    
+    if (pg_boundscheck(offset, length)) {
+        char *result = malloc(sizeof(char) * (length + 1)); // include null term.
+        memcpy(result, &(pg->data[offset]), length);
 
-    if (pg->modified) {
-
+        return result;
     }
+
+    return NULL;
 }
 
 
-void pg_erase(page* pg)
+double pg_getfloat(page *pg, int offset)
 {
+    if (pg_boundscheck(offset, sizeof(double))) {
+        double result = (double) pg->data[offset];
 
+        return result;
+    }
+
+    return 0.0;
 }
 
 
-void pg_pin(page* pg)
+int pg_setint(page *pg, int offset, int value)
 {
-    pg->pinned += 1;
+    if (pg_boundscheck(offset, sizeof(int))) {
+        pg->data[offset] = value;
+        pg->modified = TRUE;
+
+        return 1;
+    }
+
+    return 0;
 }
 
 
-void pg_unpin(page* pg) 
+int pg_setchar(page *pg, int offset, char *value, int length)
 {
-    pg->pinned -= 1;
+    if (pg_boundscheck(offset, length)) {
+        memcpy(&(pg->data[offset]), value, length);
+        pg->modified = TRUE;
+
+        return 1;
+    }
+
+    return 0;
 }
 
 
-void pg_modified(page* pg) 
+int pg_setfloat(page *pg, int offset, double value)
 {
-    pg->modified = TRUE;
+    if (pg_boundscheck(offset, sizeof(double))) {
+        pg->data[offset] = value;
+        pg->modified = TRUE;
+
+        return 1;
+    }
+
+    return 0;
 }
-*/

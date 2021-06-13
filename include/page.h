@@ -36,12 +36,10 @@ typedef struct page {
     sem_t locked;
 } page;
 
-void pg_pool_init(int pool_size);
-page *pg_load(FILE *file, int id);
-void pg_flush(page* pg);
-void pg_pin(page* pg);
-void pg_unpin(page* pg);
-void pg_modified(page* pg);
+int pg_getint(page *pg, int offset);
+char *pg_getchar(page *pg, int offset, int length);
+double pg_getfloat(page *pg, int offset);
 
-
-
+int pg_setint(page *pg, int offset, int value);
+int pg_setchar(page *pg, int offset, char *value, int length);
+int pg_setfloat(page *pg, int offset, double value);
